@@ -10,6 +10,7 @@ import {
   Pause,
 } from "lucide-react";
 import { useFrameSequence } from "@/lib/useFrameSequence";
+import { BrandEntranceLoader } from "@/components/BrandEntranceLoader";
 
 const TOTAL_PARKER_FRAMES = 300;
 
@@ -409,27 +410,14 @@ export const ParkerScrollytelling: React.FC = () => {
           </div>
         </div>
 
-        {/* Loading Spinner & Progress */}
-        {!isReady && (
-          <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
-            <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-            <div className="text-center space-y-1">
-              <p className="text-xs font-mono uppercase tracking-widest text-neutral-300">
-                Loading 3D Experience • {fastBootProgress}%
-              </p>
-              <p className="text-[10px] text-neutral-500 font-mono">
-                Parker Luxury Writing Collection
-              </p>
-            </div>
-            <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-white transition-all duration-150 ease-out"
-                style={{ width: `${fastBootProgress}%` }}
-              />
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Branded Logo Entrance Loader */}
+      <BrandEntranceLoader
+        isReady={isReady}
+        progress={fastBootProgress}
+        subtitle="Parker Luxury Writing Collection"
+      />
 
       {/* Hotspot Modal */}
       {selectedHotspot && (

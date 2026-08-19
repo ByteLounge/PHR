@@ -54,7 +54,10 @@ export const Navbar: React.FC<NavbarProps> = ({ scrollProgress = 0, onExploreCli
                 href="/"
                 className="flex items-center gap-2.5 group focus:outline-none rounded-md"
               >
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border border-white/20 bg-white p-0.5 transition-transform group-hover:scale-105">
+                <div
+                  id="navbar-brand-logo"
+                  className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden border border-white/20 bg-white p-0.5 transition-transform group-hover:scale-105"
+                >
                   <Image
                     src="/logo.jpeg"
                     alt="P.H. Rajput & Sons"
