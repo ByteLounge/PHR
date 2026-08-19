@@ -8,3 +8,14 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+[[headers]]
+  for = "/frames/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/parker-frames/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+

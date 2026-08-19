@@ -34,8 +34,8 @@ const CATEGORIES: CategoryItem[] = [
     icon: <PenTool className="w-5 h-5 text-white" />,
     popularItems: ["Parker IM Premium", "Parker Quink Refills", "Octane Gel Pens"],
     itemCount: "120+ Products",
-    href: "/",
-    badge: "Hero 3D",
+    href: "/products",
+    badge: "Products & Pricing",
   },
   {
     id: "geometry-math",

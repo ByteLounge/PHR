@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { InteractiveToolModal, TOOL_DATA } from "./InteractiveToolModal";
 import { useCart } from "@/context/CartContext";
+import { useFrameSequence } from "@/lib/useFrameSequence";
 
 const TOTAL_FRAMES = 300;
 
@@ -44,124 +45,26 @@ export const HeroScrollytelling: React.FC<{
   onShopClick?: () => void;
 }> = ({ onScrollUpdate, onShopClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES + 1).fill(null));
-
-  const [imagesLoadedCount, setImagesLoadedCount] = useState(0);
-  const [isReady, setIsReady] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentFrameIndex, setCurrentFrameIndex] = useState(1);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showHotspots, setShowHotspots] = useState(true);
   const [isPlayingAuto, setIsPlayingAuto] = useState(false);
 
   const { addToCart } = useCart();
-  const animFrameIdRef = useRef<number | null>(null);
-  const targetFrameRef = useRef<number>(1);
-  const currentDrawnFrameRef = useRef<number>(1);
 
-  // Progressive Preload
-  useEffect(() => {
-    let isCancelled = false;
-    let loaded = 0;
-    const priorityIndices = [1, 20, 50, 80, 120, 150, 180, 220, 260, 300];
-
-    const loadIndex = (index: number): Promise<void> => {
-      return new Promise((resolve) => {
-        if (imagesRef.current[index]) {
-          resolve();
-          return;
-        }
-        const img = new window.Image();
-        img.src = getFramePath(index);
-        img.onload = () => {
-          if (!isCancelled) {
-            imagesRef.current[index] = img;
-            loaded++;
-            setImagesLoadedCount(loaded);
-            if (index === 1) setIsReady(true);
-          }
-          resolve();
-        };
-        img.onerror = () => resolve();
-      });
-    };
-
-    Promise.all(priorityIndices.map((i) => loadIndex(i))).then(() => {
-      if (isCancelled) return;
-      setIsReady(true);
-
-      const remaining: number[] = [];
-      for (let i = 1; i <= TOTAL_FRAMES; i++) {
-        if (!priorityIndices.includes(i)) remaining.push(i);
-      }
-
-      const batchSize = 10;
-      let currentIdx = 0;
-      const loadNextBatch = () => {
-        if (isCancelled || currentIdx >= remaining.length) return;
-        const batch = remaining.slice(currentIdx, currentIdx + batchSize);
-        currentIdx += batchSize;
-        Promise.all(batch.map((i) => loadIndex(i))).then(() => {
-          if (!isCancelled && currentIdx < remaining.length) {
-            setTimeout(loadNextBatch, 20);
-          }
-        });
-      };
-      loadNextBatch();
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  // Responsive Canvas Drawing
-  const drawFrame = useCallback((frameIdx: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) return;
-
-    const clampedIdx = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(frameIdx)));
-    let img = imagesRef.current[clampedIdx];
-    if (!img) {
-      for (let offset = 1; offset <= 30; offset++) {
-        if (imagesRef.current[clampedIdx - offset]) {
-          img = imagesRef.current[clampedIdx - offset];
-          break;
-        }
-        if (imagesRef.current[clampedIdx + offset]) {
-          img = imagesRef.current[clampedIdx + offset];
-          break;
-        }
-      }
-    }
-    if (!img) img = imagesRef.current[1];
-
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      currentDrawnFrameRef.current = clampedIdx;
-      setCurrentFrameIndex(clampedIdx);
-    }
-  }, []);
-
-  // Animation Loop
-  useEffect(() => {
-    const renderLoop = () => {
-      const target = targetFrameRef.current;
-      const current = currentDrawnFrameRef.current;
-      if (Math.abs(target - current) > 0.05) {
-        const next = current + (target - current) * 0.25;
-        drawFrame(next);
-      }
-      animFrameIdRef.current = requestAnimationFrame(renderLoop);
-    };
-    animFrameIdRef.current = requestAnimationFrame(renderLoop);
-    return () => {
-      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
-    };
-  }, [drawFrame]);
+  const {
+    canvasRef,
+    isReady,
+    fastBootProgress,
+    currentFrameIndex,
+    setTargetFrame,
+  } = useFrameSequence({
+    totalFrames: TOTAL_FRAMES,
+    getFramePath,
+    keyframeStep: 5,
+    fastBootDenseCount: 15,
+    maxConcurrentBackground: 6,
+  });
 
   // Scroll Progress Handler
   useEffect(() => {
@@ -195,30 +98,23 @@ export const HeroScrollytelling: React.FC<{
         const stageProgress = (progress - 0.88) / 0.12;
         calculatedFrame = 150 - stageProgress * 149;
       }
-      targetFrameRef.current = Math.max(1, Math.min(TOTAL_FRAMES, calculatedFrame));
+      setTargetFrame(calculatedFrame);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [onScrollUpdate]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = 1280;
-    canvas.height = 720;
-    if (imagesRef.current[1]) drawFrame(1);
-  }, [drawFrame, isReady]);
+  }, [onScrollUpdate, setTargetFrame]);
 
   // Autoplay
   useEffect(() => {
     if (!isPlayingAuto) return;
     const interval = setInterval(() => {
-      targetFrameRef.current = (targetFrameRef.current % TOTAL_FRAMES) + 1;
-    }, 40);
+      setTargetFrame((currentFrameIndex % TOTAL_FRAMES) + 1);
+    }, 35);
     return () => clearInterval(interval);
-  }, [isPlayingAuto]);
+  }, [isPlayingAuto, currentFrameIndex, setTargetFrame]);
+
 
   const scrollToShop = () => {
     if (onShopClick) {
@@ -507,13 +403,24 @@ export const HeroScrollytelling: React.FC<{
           </div>
         </div>
 
-        {/* Loading Spinner */}
+        {/* Loading Spinner & Progress */}
         {!isReady && (
-          <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center space-y-3">
-            <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-            <p className="text-[11px] font-mono uppercase tracking-widest text-neutral-400">
-              Loading 3D Sequence...
-            </p>
+          <div className="absolute inset-0 bg-black z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
+            <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+            <div className="text-center space-y-1">
+              <p className="text-xs font-mono uppercase tracking-widest text-neutral-300">
+                Loading 3D Experience • {fastBootProgress}%
+              </p>
+              <p className="text-[10px] text-neutral-500 font-mono">
+                Classmate Asteroid Series
+              </p>
+            </div>
+            <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-white transition-all duration-150 ease-out"
+                style={{ width: `${fastBootProgress}%` }}
+              />
+            </div>
           </div>
         )}
       </div>

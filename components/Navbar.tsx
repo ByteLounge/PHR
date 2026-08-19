@@ -80,29 +80,34 @@ export const Navbar: React.FC<NavbarProps> = ({ scrollProgress = 0, onExploreCli
               <Link
                 href="/"
                 className={`transition-colors hover:text-white flex items-center gap-1.5 ${
-                  !isGeometryPage ? "text-white font-semibold" : "text-neutral-400"
+                  pathname === "/" ? "text-white font-semibold" : "text-neutral-400"
                 }`}
               >
                 <PenTool className="w-3.5 h-3.5 text-white" />
-                <span>Parker Pen (Hero)</span>
+                <span>Parker Pen (3D)</span>
+              </Link>
+
+              <Link
+                href="/products"
+                className={`transition-colors hover:text-white flex items-center gap-1.5 ${
+                  pathname === "/products" ? "text-white font-semibold" : "text-neutral-400"
+                }`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                <span>Products & Pricing</span>
               </Link>
 
               <Link
                 href="/geometry"
                 className={`transition-colors hover:text-white flex items-center gap-1.5 ${
-                  isGeometryPage ? "text-white font-semibold" : "text-neutral-400"
+                  pathname === "/geometry" || pathname === "/stationery"
+                    ? "text-white font-semibold"
+                    : "text-neutral-400"
                 }`}
               >
                 <Compass className="w-3.5 h-3.5 text-white" />
                 <span>Classmate Asteroid (3D)</span>
               </Link>
-
-              <button
-                onClick={() => scrollToSection(isGeometryPage ? "product-details" : "parker-details")}
-                className="transition-colors hover:text-white text-neutral-400"
-              >
-                Specifications
-              </button>
 
               <button
                 onClick={() => scrollToSection("store-trust")}
@@ -145,16 +150,13 @@ export const Navbar: React.FC<NavbarProps> = ({ scrollProgress = 0, onExploreCli
               </button>
 
               {/* Shop CTA */}
-              <button
-                onClick={() => {
-                  if (onShopClick) onShopClick();
-                  else scrollToSection(isGeometryPage ? "product-details" : "parker-details");
-                }}
+              <Link
+                href="/products"
                 className="hidden sm:inline-flex items-center gap-1.5 bg-white hover:bg-neutral-200 text-black font-semibold text-xs px-4 py-2 rounded-full transition-all active:scale-95"
               >
-                <span>Shop Now</span>
+                <span>Shop Products</span>
                 <ArrowRight className="w-3 h-3" />
-              </button>
+              </Link>
 
               {/* Mobile Hamburger */}
               <button
@@ -225,18 +227,37 @@ export const Navbar: React.FC<NavbarProps> = ({ scrollProgress = 0, onExploreCli
                     3D
                   </span>
                 </Link>
+
+                <Link
+                  href="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`w-full text-left py-2.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-between border ${
+                    pathname === "/products"
+                      ? "bg-white/10 text-white border-white/20"
+                      : "text-neutral-300 border-white/5 hover:bg-white/5"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                    <span>Products & Pricing</span>
+                  </span>
+                  <span className="text-[9px] bg-white/15 text-white px-1.5 py-0.5 rounded font-mono">
+                    SHOP
+                  </span>
+                </Link>
               </div>
 
               <div className="space-y-2">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">
                   Store Navigation
                 </p>
-                <button
-                  onClick={() => scrollToSection(isGeometryPage ? "product-details" : "parker-details")}
-                  className="w-full text-left py-2 px-3 rounded-lg text-xs text-neutral-300 hover:bg-white/5"
+                <Link
+                  href="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2 px-3 rounded-lg text-xs text-neutral-300 hover:bg-white/5 block"
                 >
-                  Specifications & Price
-                </button>
+                  Products Catalog & Pricing
+                </Link>
                 <button
                   onClick={() => scrollToSection("store-trust")}
                   className="w-full text-left py-2 px-3 rounded-lg text-xs text-neutral-300 hover:bg-white/5"
